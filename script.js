@@ -1,0 +1,165 @@
+document.getElementById('cpf').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    if (value.length <= 11) {
+        // Aplica a máscara
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        e.target.value = value;
+    }
+});
+
+document.getElementById('generatePDF').addEventListener('click', async function() {
+  const form = document.getElementById('voucherForm');
+  if (!form.checkValidity()) {
+    alert('Por favor, preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  // Preenche preview
+  document.getElementById('previewNome').textContent = document.getElementById('nome').value;
+  document.getElementById('previewCPF').textContent = document.getElementById('cpf').value;
+  document.getElementById('previewData').textContent = document.getElementById('dataNascimento').value;
+  document.getElementById('previewPassageiros').textContent = document.getElementById('numeroPassageiros').value;
+  document.getElementById('previewCriancas').textContent = document.getElementById('numeroCriancas').value;
+  document.getElementById('previewVooChegada').textContent = document.getElementById('numeroVooChegada').value;
+  document.getElementById('previewHoraVooChegada').textContent = document.getElementById('horaVooChegada').value;
+  document.getElementById('previewVooPartida').textContent = document.getElementById('numeroVooPartida').value;
+  document.getElementById('previewHoraVooPartida').textContent = document.getElementById('horaVooPartida').value;
+  document.getElementById('previewHotel').textContent = document.getElementById('hotel').value;
+  document.getElementById('previewPago').textContent = document.getElementById('pago').value;
+
+  // Data de emissão
+  const hoje = new Date();
+  document.getElementById('previewDataEmissao').textContent = hoje.toLocaleDateString('pt-BR');
+
+  const preview = document.getElementById('voucherPreview');
+  preview.style.display = 'block';
+
+  // Espera assets
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const imgs = Array.from(preview.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(res => { img.onload = res; img.onerror = res; });
+  }));
+
+  // Info debug básica
+  const rect = preview.getBoundingClientRect();
+  console.log('DEBUG: voucherPreview rect:', rect);
+  console.log('DEBUG: computed style display:', getComputedStyle(preview).display);
+  console.log('DEBUG: images list:', imgs.map(i => ({ src: i.src, complete: i.complete, naturalWidth: i.naturalWidth, naturalHeight: i.naturalHeight })));
+
+  try {
+    // Define tamanho fixo para o voucher
+    const voucherWidth = 800;
+    const voucherHeight = 1000; // Aumentado para acomodar todo o conteúdo
+
+    // Cria um container temporário com dimensões fixas
+    const tempContainer = document.createElement('div');
+    tempContainer.style.width = voucherWidth + 'px';
+    tempContainer.style.minHeight = voucherHeight + 'px';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.backgroundColor = 'white';
+    tempContainer.style.padding = '20px';
+    tempContainer.style.boxSizing = 'border-box';
+    tempContainer.innerHTML = preview.innerHTML;
+
+    // Copia os estilos essenciais do preview original
+    tempContainer.style.fontFamily = getComputedStyle(preview).fontFamily;
+    tempContainer.style.fontSize = '14px';
+    tempContainer.style.lineHeight = '1.4';
+    tempContainer.style.color = '#333';
+
+    document.body.appendChild(tempContainer);
+
+    const canvas = await html2canvas(tempContainer, {
+      useCORS: true,
+      allowTaint: false,
+      scale: 1.5, // Reduzido para melhor qualidade
+      logging: false,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: voucherWidth,
+      windowHeight: voucherHeight
+    });
+
+    document.body.removeChild(tempContainer);
+
+    // Remove canvas de debug anterior se existir
+    const oldCanvas = document.getElementById('debug_canvas_voucher');
+    if (oldCanvas) {
+      oldCanvas.remove();
+    }
+
+    // checa pixels do canto
+    const ctx = canvas.getContext('2d');
+    const w = Math.max(1, Math.min(10, canvas.width)), h = Math.max(1, Math.min(10, canvas.height));
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const allZero = data.every(v => v === 0);
+    console.log('DEBUG: primeira amostra de pixels (len):', data.length, 'allZero?', allZero);
+
+    if (allZero) {
+      throw new Error('Canvas aparentemente vazio (pixels iniciais todos 0).');
+    }
+
+    // Converte para PNG e faz download
+    const imgData = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'voucher_galdino_turismo.png';
+    link.href = imgData;
+    link.click();
+
+    console.log('PNG gerado com sucesso via html2canvas');
+
+  } catch (err) {
+    // Log do erro
+    console.error('Erro na geração PNG:', err);
+
+    // Método direto com dimensões fixas
+    const voucherWidth = 800;
+    const voucherHeight = 1000; // Aumentado para acomodar todo o conteúdo
+
+    const tempContainer = document.createElement('div');
+    tempContainer.style.width = voucherWidth + 'px';
+    tempContainer.style.minHeight = voucherHeight + 'px';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.backgroundColor = 'white';
+    tempContainer.style.padding = '20px';
+    tempContainer.style.boxSizing = 'border-box';
+    tempContainer.innerHTML = preview.innerHTML;
+
+    tempContainer.style.fontFamily = getComputedStyle(preview).fontFamily;
+    tempContainer.style.fontSize = '14px';
+    tempContainer.style.lineHeight = '1.4';
+    tempContainer.style.color = '#333';
+
+    document.body.appendChild(tempContainer);
+
+    const canvas = await html2canvas(tempContainer, {
+      useCORS: true,
+      allowTaint: true,
+      scale: 1.5,
+      logging: false,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: voucherWidth,
+      windowHeight: voucherHeight
+    });
+
+    document.body.removeChild(tempContainer);
+
+    const imgData = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'voucher_galdino_turismo.png';
+    link.href = imgData;
+    link.click();
+    console.log('PNG gerado com sucesso.');
+  }
+});
