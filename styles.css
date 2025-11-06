@@ -250,6 +250,72 @@ button:hover {
     font-size: 1.05em;
 }
 
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.clients-table th,
+.clients-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(200, 160, 67, 0.3);
+}
+
+.clients-table th {
+    background-color: rgba(12, 35, 63, 0.1);
+    color: #0C233F;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85em;
+}
+
+.clients-table td {
+    color: #333;
+}
+
+.clients-table tr:nth-child(even) {
+    background-color: rgba(248, 249, 250, 0.5);
+}
+
+.clients-table tr:hover {
+    background-color: rgba(200, 160, 67, 0.1);
+}
+
+/* Espaçamento extra para área de clientes no formulário */
+#clientsContainer .client-entry {
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(200, 160, 67, 0.15);
+}
+
+#clientsContainer .client-entry:last-child {
+    border-bottom: none;
+}
+
+.remove-client {
+    background: none;
+    color: #C8A043;
+    border: 1px solid #C8A043;
+    padding: 6px 14px;
+    font-size: 0.95em;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 5px;
+    margin-bottom: 0;
+    width: auto;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.remove-client:hover {
+    background: #C8A043;
+    color: #0C233F;
+}
+
 .voucher-footer {
     margin-top: 30px;
     padding: 20px;
