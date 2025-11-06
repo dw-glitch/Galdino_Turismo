@@ -1,13 +1,32 @@
-document.getElementById('cpf').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-    if (value.length <= 11) {
-        // Aplica a máscara
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-        e.target.value = value;
-    }
-});
+let clientIndex = 0;
+
+function addClient() {
+    const container = document.getElementById('clientsContainer');
+    const clientDiv = document.createElement('div');
+    clientDiv.className = 'client-entry';
+    clientDiv.innerHTML = `
+        <div class="form-group">
+            <label for="nome${clientIndex}">Nome:</label>
+            <input type="text" id="nome${clientIndex}" name="nome${clientIndex}" required>
+        </div>
+        <div class="form-group">
+            <label for="cpf${clientIndex}">CPF ou RG:</label>
+            <input type="text" id="cpf${clientIndex}" name="cpf${clientIndex}" required>
+        </div>
+        <button type="button" class="remove-client" onclick="removeClient(this)">Remover</button>
+    `;
+    container.appendChild(clientDiv);
+    clientIndex++;
+}
+
+function removeClient(button) {
+    button.parentElement.remove();
+}
+
+document.getElementById('addClientBtn').addEventListener('click', addClient);
+
+// Add initial client
+addClient();
 
 document.getElementById('generatePDF').addEventListener('click', async function() {
   const form = document.getElementById('voucherForm');
@@ -17,9 +36,41 @@ document.getElementById('generatePDF').addEventListener('click', async function(
   }
 
   // Preenche preview
-  document.getElementById('previewNome').textContent = document.getElementById('nome').value;
-  document.getElementById('previewCPF').textContent = document.getElementById('cpf').value;
-  document.getElementById('previewData').textContent = document.getElementById('dataNascimento').value;
+  const clientsList = [];
+  const clientEntries = document.querySelectorAll('.client-entry');
+  clientEntries.forEach((entry) => {
+    const nomeInput = entry.querySelector('input[name^="nome"]');
+    const cpfInput = entry.querySelector('input[name^="cpf"]');
+    if (nomeInput && cpfInput) {
+      const nome = nomeInput.value;
+      const cpf = cpfInput.value;
+      clientsList.push({ nome, cpf });
+    }
+  });
+  const previewClients = document.getElementById('previewClients');
+  if (clientsList.length > 0) {
+    previewClients.innerHTML = `
+      <table class="clients-table">
+        <thead>
+          <tr>
+            <th>Nome Completo</th>
+            <th>CPF ou RG</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${clientsList.map(client => `
+            <tr>
+              <td>${client.nome}</td>
+              <td>${client.cpf}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } else {
+    previewClients.innerHTML = '<p>Nenhum cliente adicionado.</p>';
+  }
+
   document.getElementById('previewPassageiros').textContent = document.getElementById('numeroPassageiros').value;
   document.getElementById('previewCriancas').textContent = document.getElementById('numeroCriancas').value;
   document.getElementById('previewVooChegada').textContent = document.getElementById('numeroVooChegada').value;
